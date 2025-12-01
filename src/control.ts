@@ -1,4 +1,4 @@
-import { deadband, loadImage, newPress } from './util.ts';
+import { deadband, newPress } from './util.ts';
 import type { Robot } from './robot.ts';
 import type { Field } from './field.ts';
 
