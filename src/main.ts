@@ -7,7 +7,8 @@ let robot = new Robot(
     14, // Height (inches)
     6, // Speed (ft/s)
     16,  // Track Radius (inches)
-    30 // Max Accel (ft/s^2)
+    18, // Max Accel (ft/s^2)
+    25 // Max Decel
 );
 
 let fields = [
