@@ -2,7 +2,7 @@ import { to_px, to_pxx, to_pxy, to_inertial_rad, clamp, to_rad, to_deg, reduce_0
 import { ctx } from './globals.ts';
 import type { Field } from './field.ts';
 
-export class Robot {
+export class TankDriveRobot {
     public width: number;
     public height: number;
     public maxSpeed: number;
@@ -19,14 +19,17 @@ export class Robot {
     public maxAccel: number;
     public maxDecel: number;
 
-    constructor(width: number, height: number, maxSpeed: number, trackWidth: number, maxAccel: number, maxDecel: number) {
+    constructor(x: number, y: number, angle: number, width: number, height: number, maxSpeed: number, trackWidth: number, maxAccel: number, maxDecel: number) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
         this.width = width;
         this.height = height;
         this.maxSpeed = maxSpeed;
         this.trackWidth = trackWidth;
         this.maxAccel = maxAccel;
         this.maxDecel = maxDecel
-        this.color = '#969696ff';
+        this.color = '#969696c4';
     }
 
     private set_x(x: number) { 
@@ -119,7 +122,9 @@ export class Robot {
     }
 
     private draw_odom_data() {
-        ctx.save();
+        if (!this.odomData) return;
+
+        ctx .save();
         ctx.font = '20px Calibri';
         ctx.fillStyle = 'white';
         ctx.textBaseline = 'top';
@@ -129,7 +134,9 @@ export class Robot {
 
         ctx.fillText(`vL: ${this.vL.toFixed(2)}`, 20, 95);
         ctx.fillText(`vR: ${this.vR.toFixed(2)}`, 20, 120);
-        ctx.fillText(`a: ${this.maxAccel.toFixed(2)}`, 20, 145);
+        ctx.fillText(`Velo: ${this.maxSpeed.toFixed(2)}`, 20, 120+25);
+        ctx.fillText(`Accel: ${this.maxAccel.toFixed(2)}`, 20, 120+50);
+        ctx.fillText(`Decel: ${this.maxDecel.toFixed(2)}`, 20, 120+75);
         ctx.restore();
     }
 

@@ -15,3 +15,7 @@ export const fieldHeight_in = 1.5
 export const distance_max_range = 78;
 
 export const kPX = 96;
+
+export const settings = {
+  useTankDrive: false,
+};

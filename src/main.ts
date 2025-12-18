@@ -1,14 +1,32 @@
-import { Robot } from './robot.ts'
 import { Field } from './field.ts';
-import { fieldControl, menuButtons, splitArcade } from './control.ts';
+import { fieldControl, menuButtons, splitArcadeMecnum, splitArcadeTank } from './control.ts';
+import { TankDriveRobot } from './tankDriveRobot.ts';
+import { mecanumDriveRobot } from './mecnumRobot.ts';
+import { settings } from './globals.ts';
 
-let robot = new Robot(
+let tankRobot = new TankDriveRobot(
+    0, // Start x
+    0, // Start y
+    0, // Start angle
     14, // Width (inches)
     14, // Height (inches)
     6, // Speed (ft/s)
-    16,  // Track Radius (inches)
-    18, // Max Accel (ft/s^2)
-    25 // Max Decel
+    14,  // Track Radius (inches)
+    15, // Max Accel (ft/s^2)
+    15
+);
+
+let mecanumRobot = new mecanumDriveRobot(
+    0, // Start x
+    0, // Start y
+    0, // Start angle
+    14, // Width (inches)
+    14, // Height (inches)
+    6, // Speed (ft/s)
+    14,  // Track Radius (inches)
+    14,
+    15, // Max Accel (ft/s^2)
+    15
 );
 
 let fields = [
@@ -20,11 +38,26 @@ let fields = [
     new Field("./high_stakes_skills.png"),
 ]
 
-function update(dt: number) {
+function driveMecnumRobot(dt: number) {
     const field = fieldControl(fields);
-    menuButtons(robot); 
-    robot.render();
-    splitArcade(robot, field, dt);
+    splitArcadeMecnum(mecanumRobot, field, dt);    
+    menuButtons(mecanumRobot)
+    mecanumRobot.render();
+}
+
+function driveTankRobot(dt: number) {
+    const field = fieldControl(fields);
+    splitArcadeTank(tankRobot, field, dt);        
+    menuButtons(tankRobot)
+    tankRobot.render();
+}
+
+function update(dt: number) {
+    if (settings.useTankDrive) {
+        driveTankRobot(dt);
+    } else {
+        driveMecnumRobot(dt);
+    }
 }
 
 let lastFrameTime = 0;
