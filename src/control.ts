@@ -1,7 +1,6 @@
 import { deadband, newPress } from './util.ts';
 import type { TankDriveRobot } from './tankDriveRobot.ts';
 import type { Field } from './field.ts';
-import type { Path } from './drive/trajectory.ts';
 import type { mecanumDriveRobot } from './mecnumRobot.ts';
 import { settings } from './globals.ts';
 
@@ -41,16 +40,6 @@ document.addEventListener('keyup', (event) => {
 });
 
 const DEADZONE = 0.15;
-
-// let idx = 0;
-// export function slider(robot: TankDriveRobot, path: Path) {
-//     if (idx >= path.trajectory.length) return;
-
-//     const pose = path.trajectory[idx];
-//     // robot.setPose(pose.x, pose.y, pose.angle)
-//     if (keysPressed['n']) idx-=2;
-//     if (keysPressed['m']) idx+=2;
-// }
 
 export function menuButtons(robot: TankDriveRobot | mecanumDriveRobot) {
     let accel = 0;
@@ -161,10 +150,10 @@ export function splitArcadeMecnum(robot: mecanumDriveRobot, field: Field, dt: nu
 
     if (keysPressed['w']) throttle += 1;
     if (keysPressed['s']) throttle -= 1;
-    if (keysPressed['d']) turn -= .5;
-    if (keysPressed['a']) turn += .5;
-    if (keysPressed['ArrowLeft']) strafe += .5
-    if (keysPressed['ArrowRight']) strafe -= .5
+    if (keysPressed['ArrowRight']) turn -= .5;
+    if (keysPressed['ArrowLeft']) turn += .5;
+    if (keysPressed['a']) strafe += .5
+    if (keysPressed['d']) strafe -= .5
 
     const flCmd = throttle + turn + strafe;
     const frCmd = throttle - turn - strafe;

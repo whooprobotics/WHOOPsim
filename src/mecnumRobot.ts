@@ -1,7 +1,6 @@
 import { to_px, to_pxx, to_pxy, to_inertial_rad, clamp, to_rad, to_deg, reduce_0_360 } from './util.ts';
 import { ctx } from './globals.ts';
 import type { Field } from './field.ts';
-import type { Path } from './drive/trajectory.ts';
 
 export class mecanumDriveRobot {
     public width: number;
@@ -14,7 +13,6 @@ export class mecanumDriveRobot {
     private y: number = 0;
     private angle: number = 0;
     private color: string;
-    private pathTime: number = 0;
     public odomData: boolean = true;
 
     private vFL = 0;
@@ -136,23 +134,6 @@ export class mecanumDriveRobot {
         this.x = x;
         this.y = y;
         this.angle = angle;
-    }
-
-    public pathFollow(path: Path, dt: number) {
-        if (!path.trajectory.length) return;
-
-        this.pathTime += dt;
-        if (this.pathTime > path.totalTime) {
-            this.pathTime = path.totalTime;
-        }
-
-        const normalized = this.pathTime / path.totalTime;
-        const idx = Math.floor(normalized * (path.trajectory.length - 1));
-        const snap = path.trajectory[idx];
-
-        this.set_x(snap.x);
-        this.set_y(snap.y);
-        this.set_angle(snap.angle);
     }
 
     private draw_odom_data() {
