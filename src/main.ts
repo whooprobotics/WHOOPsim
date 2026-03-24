@@ -1,5 +1,5 @@
 import { Field } from './field.ts';
-import { fieldControl, menuButtons, splitArcadeMecnum, splitArcadeTank } from './control.ts';
+import { fieldControl, menuButtons, splitArcadeMecnum, splitArcadeMecnumFieldCentric, splitArcadeTank } from './control.ts';
 import { TankDriveRobot } from './tankDriveRobot.ts';
 import { mecanumDriveRobot } from './mecnumRobot.ts';
 import { settings } from './globals.ts';
@@ -40,7 +40,7 @@ let fields = [
 
 function driveMecnumRobot(dt: number) {
     const field = fieldControl(fields);
-    splitArcadeMecnum(mecanumRobot, field, dt);    
+    splitArcadeMecnumFieldCentric(mecanumRobot, field, dt);    
     menuButtons(mecanumRobot)
     mecanumRobot.render();
 }

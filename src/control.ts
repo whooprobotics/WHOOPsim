@@ -1,4 +1,4 @@
-import { deadband, newPress } from './util.ts';
+import { deadband, newPress, to_rad } from './util.ts';
 import type { TankDriveRobot } from './tankDriveRobot.ts';
 import type { Field } from './field.ts';
 import type { mecanumDriveRobot } from './mecnumRobot.ts';
@@ -159,6 +159,52 @@ export function splitArcadeMecnum(robot: mecanumDriveRobot, field: Field, dt: nu
     const frCmd = throttle - turn - strafe;
     const rlCmd = throttle + turn - strafe;
     const rrCmd = throttle - turn + strafe;
+
+    robot.mecanumDrive(flCmd, frCmd, rlCmd, rrCmd, field, dt);
+}
+
+export function controlGamePadMecnumFieldCentric(gamepad: Gamepad, robot: mecanumDriveRobot, field: Field, dt: number) {
+    const axes = gamepad.axes;
+
+    const throttle = deadband(-axes[1], DEADZONE);
+    const strafe = deadband(-axes[0], DEADZONE);
+    const turn = deadband(-axes[2], DEADZONE);
+
+    const angle = robot.get_angle();
+    const robotFwd =  throttle * Math.cos(to_rad(angle)) + strafe * Math.sin(to_rad(angle));
+    const robotStrafe = -throttle * Math.sin(to_rad(angle)) + strafe * Math.cos(to_rad(angle));
+
+    const fl = robotFwd + turn + robotStrafe;
+    const fr = robotFwd - turn - robotStrafe;
+    const rl = robotFwd + turn - robotStrafe;
+    const rr = robotFwd - turn + robotStrafe;
+
+    robot.mecanumDrive(fl, fr, rl, rr, field, dt);
+}
+
+export function splitArcadeMecnumFieldCentric(robot: mecanumDriveRobot, field: Field, dt: number) {
+    const gp = getGamepad();
+    if (gp) { return controlGamePadMecnumFieldCentric(gp, robot, field, dt); }
+
+    let throttle = 0;
+    let strafe   = 0;
+    let turn     = 0;
+
+    if (keysPressed['w']) throttle += 1;
+    if (keysPressed['s']) throttle -= 1;
+    if (keysPressed['a']) strafe   += 1;
+    if (keysPressed['d']) strafe   -= 1;
+    if (keysPressed['ArrowLeft'])  turn += 1;
+    if (keysPressed['ArrowRight']) turn -= 1;
+
+    const angle = robot.get_angle();
+    const robotFwd =  throttle * Math.cos(to_rad(angle)) + strafe * Math.sin(to_rad(angle));
+    const robotStrafe = -throttle * Math.sin(to_rad(angle)) + strafe * Math.cos(to_rad(angle));
+
+    const flCmd = robotFwd + turn + robotStrafe;
+    const frCmd = robotFwd - turn - robotStrafe;
+    const rlCmd = robotFwd + turn - robotStrafe;
+    const rrCmd = robotFwd - turn + robotStrafe;
 
     robot.mecanumDrive(flCmd, frCmd, rlCmd, rrCmd, field, dt);
 }
