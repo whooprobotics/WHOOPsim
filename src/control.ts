@@ -1,7 +1,6 @@
 import { deadband, newPress, to_rad } from './util.ts';
-import type { TankDriveRobot } from './tankDriveRobot.ts';
+import type { Robot } from './robot.ts';
 import type { Field } from './field.ts';
-import type { mecanumDriveRobot } from './mecnumRobot.ts';
 import { settings } from './globals.ts';
 
 let gamepadIdx: number | null = null;
@@ -41,10 +40,13 @@ document.addEventListener('keyup', (event) => {
 
 const DEADZONE = 0.15;
 
-export function menuButtons(robot: TankDriveRobot | mecanumDriveRobot) {
-    let accel = 0;
-    let decel = 0;
-    let velo = 0
+const TAU_STEP = 0.01;
+const TAU_MIN = 0.01;
+
+export function menuButtons(robot: Robot) {
+    let velo = 0;
+    let latTau = 0;
+    let angTau = 0;
 
     if (newPress('1'))  {
         keysHandled['1'] = true;
@@ -52,38 +54,38 @@ export function menuButtons(robot: TankDriveRobot | mecanumDriveRobot) {
     }
     if (newPress('2')) {
         keysHandled['2'] = true;
-        velo = 1;  
-    } 
+        velo = 1;
+    }
     if (newPress('3'))  {
         keysHandled['3'] = true;
-        accel = -1;
+        latTau = -TAU_STEP;
     }
     if (newPress('4')) {
         keysHandled['4'] = true;
-        accel = 1;  
-    } 
+        latTau = TAU_STEP;
+    }
     if (newPress('5'))  {
         keysHandled['5'] = true;
-        decel = -1;
+        angTau = -TAU_STEP;
     }
     if (newPress('6')) {
         keysHandled['6'] = true;
-        decel = 1;  
-    } 
+        angTau = TAU_STEP;
+    }
 
     if (newPress('h')) {
         keysHandled['h'] = true;
-        robot.odomData = !robot.odomData; 
+        robot.odomData = !robot.odomData;
     }
-    
+
     if (newPress('r')) {
         keysHandled['r'] = true;
         settings.useTankDrive = !settings.useTankDrive;
-    } 
+    }
 
-    robot.maxDecel += decel;
     robot.maxSpeed += velo;
-    robot.maxAccel += accel;
+    robot.lateralTau = Math.max(TAU_MIN, robot.lateralTau + latTau);
+    robot.angularTau = Math.max(TAU_MIN, robot.angularTau + angTau);
 }
 
 let fieldIdx = 0;
@@ -100,16 +102,16 @@ export function fieldControl(fields: Field[]) {
     return fields[fieldIdx];
 }
 
-export function controlGamePadTank(gamepad: Gamepad, robot: TankDriveRobot, field: Field, dt: number) {
+export function controlGamePadTank(gamepad: Gamepad, robot: Robot, dt: number) {
     const axes = gamepad.axes;
 
     const throttle = deadband(-axes[1], DEADZONE);
     const turn = deadband(axes[2], DEADZONE);
 
-    robot.tankDrive(throttle + turn, throttle - turn, field, dt);
+    robot.tankDrive(throttle + turn, throttle - turn, dt);
 }
 
-export function controlGamePadMecnum(gamepad: Gamepad, robot: mecanumDriveRobot, field: Field, dt: number) {
+export function controlGamePadMecnum(gamepad: Gamepad, robot: Robot, dt: number) {
     const axes = gamepad.axes;
 
   const throttle = deadband(-axes[1], DEADZONE);
@@ -121,12 +123,12 @@ export function controlGamePadMecnum(gamepad: Gamepad, robot: mecanumDriveRobot,
     let rl = throttle - strafe + turn;
     let rr = throttle + strafe - turn;
 
-    robot.mecanumDrive(fl, fr, rl, rr, field, dt);
+    robot.mecanumDrive(fl, fr, rl, rr, dt);
 }
 
-export function splitArcadeTank(robot: TankDriveRobot, field: Field, dt: number) {
+export function splitArcadeTank(robot: Robot, dt: number) {
     const gp = getGamepad();
-    if (gp) { return controlGamePadTank(gp, robot, field, dt); }
+    if (gp) { return controlGamePadTank(gp, robot, dt); }
     let throttle = 0;
     let turn = 0;
 
@@ -138,12 +140,12 @@ export function splitArcadeTank(robot: TankDriveRobot, field: Field, dt: number)
     const leftCmd = throttle + turn;
     const rightCmd = throttle - turn;
 
-    robot.tankDrive(leftCmd, rightCmd, field, dt);
+    robot.tankDrive(leftCmd, rightCmd, dt);
 }
 
-export function splitArcadeMecnum(robot: mecanumDriveRobot, field: Field, dt: number) {
+export function splitArcadeMecnum(robot: Robot, dt: number) {
     const gp = getGamepad();
-    if (gp) { return controlGamePadMecnum(gp, robot, field, dt); }
+    if (gp) { return controlGamePadMecnum(gp, robot, dt); }
     let throttle = 0;
     let turn = 0;
     let strafe = 0;
@@ -160,10 +162,10 @@ export function splitArcadeMecnum(robot: mecanumDriveRobot, field: Field, dt: nu
     const rlCmd = throttle + turn - strafe;
     const rrCmd = throttle - turn + strafe;
 
-    robot.mecanumDrive(flCmd, frCmd, rlCmd, rrCmd, field, dt);
+    robot.mecanumDrive(flCmd, frCmd, rlCmd, rrCmd, dt);
 }
 
-export function controlGamePadMecnumFieldCentric(gamepad: Gamepad, robot: mecanumDriveRobot, field: Field, dt: number) {
+export function controlGamePadMecnumFieldCentric(gamepad: Gamepad, robot: Robot, dt: number) {
     const axes = gamepad.axes;
 
     const throttle = deadband(-axes[1], DEADZONE);
@@ -179,12 +181,12 @@ export function controlGamePadMecnumFieldCentric(gamepad: Gamepad, robot: mecanu
     const rl = robotFwd + turn - robotStrafe;
     const rr = robotFwd - turn + robotStrafe;
 
-    robot.mecanumDrive(fl, fr, rl, rr, field, dt);
+    robot.mecanumDrive(fl, fr, rl, rr, dt);
 }
 
-export function splitArcadeMecnumFieldCentric(robot: mecanumDriveRobot, field: Field, dt: number) {
+export function splitArcadeMecnumFieldCentric(robot: Robot, dt: number) {
     const gp = getGamepad();
-    if (gp) { return controlGamePadMecnumFieldCentric(gp, robot, field, dt); }
+    if (gp) { return controlGamePadMecnumFieldCentric(gp, robot, dt); }
 
     let throttle = 0;
     let strafe   = 0;
@@ -192,10 +194,10 @@ export function splitArcadeMecnumFieldCentric(robot: mecanumDriveRobot, field: F
 
     if (keysPressed['w']) throttle += 1;
     if (keysPressed['s']) throttle -= 1;
-    if (keysPressed['a']) strafe   += 1;
-    if (keysPressed['d']) strafe   -= 1;
-    if (keysPressed['ArrowLeft'])  turn += 1;
-    if (keysPressed['ArrowRight']) turn -= 1;
+    if (keysPressed['a']) strafe   -= 1;
+    if (keysPressed['d']) strafe   += 1;
+    if (keysPressed['ArrowLeft'])  turn -= 1;
+    if (keysPressed['ArrowRight']) turn += 1;
 
     const angle = robot.get_angle();
     const robotFwd =  throttle * Math.cos(to_rad(angle)) + strafe * Math.sin(to_rad(angle));
@@ -206,5 +208,13 @@ export function splitArcadeMecnumFieldCentric(robot: mecanumDriveRobot, field: F
     const rlCmd = robotFwd + turn - robotStrafe;
     const rrCmd = robotFwd - turn + robotStrafe;
 
-    robot.mecanumDrive(flCmd, frCmd, rlCmd, rrCmd, field, dt);
+    robot.mecanumDrive(flCmd, frCmd, rlCmd, rrCmd, dt);
+}
+
+export function driveMecnumRobot(robot: Robot, dt: number) {
+    splitArcadeMecnumFieldCentric(robot, dt);
+}
+
+export function driveTankRobot(robot: Robot, dt: number) {
+    splitArcadeTank(robot, dt);
 }

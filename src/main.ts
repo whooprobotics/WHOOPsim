@@ -1,62 +1,54 @@
 import { Field } from './field.ts';
-import { fieldControl, menuButtons, splitArcadeMecnum, splitArcadeMecnumFieldCentric, splitArcadeTank } from './control.ts';
-import { TankDriveRobot } from './tankDriveRobot.ts';
-import { mecanumDriveRobot } from './mecnumRobot.ts';
+import { driveMecnumRobot, driveTankRobot, fieldControl, menuButtons } from './control.ts';
+import { Robot } from './robot.ts';
 import { settings } from './globals.ts';
 
-let tankRobot = new TankDriveRobot(
+let robot = new Robot(
     0, // Start x
     0, // Start y
     0, // Start angle
     14, // Width (inches)
     14, // Height (inches)
     6, // Speed (ft/s)
-    14,  // Track Radius (inches)
-    15, // Max Accel (ft/s^2)
-    15
+    14, // Track width (inches)
+    14, // Wheel base (inches)
+    0.2, // Lateral tau (s)
+    0.1, // Angular tau (s)
 );
 
-let mecanumRobot = new mecanumDriveRobot(
-    0, // Start x
-    0, // Start y
-    0, // Start angle
-    14, // Width (inches)
-    14, // Height (inches)
-    6, // Speed (ft/s)
-    14,  // Track Radius (inches)
-    14,
-    15, // Max Accel (ft/s^2)
-    15
-);
+let pushBackField = new Field("./push_back_skills.png");
+let emptyField = new Field("./empty_field.png"); 
+let highStakesField = new Field("./high_stakes_skills.png");
 
 let fields = [
-    new Field("./push_back_skills.png", [
-        { x: 195, y: 462, w: 190, h: 25 },
-        { x: 195, y: 88, w: 190, h: 25 },
-    ]),
-    new Field("./empty_field.png"),
-    new Field("./high_stakes_skills.png"),
+    pushBackField,
+    emptyField,
+    highStakesField
 ]
 
-function driveMecnumRobot(dt: number) {
-    const field = fieldControl(fields);
-    splitArcadeMecnumFieldCentric(mecanumRobot, field, dt);    
-    menuButtons(mecanumRobot)
-    mecanumRobot.render();
-}
-
-function driveTankRobot(dt: number) {
-    const field = fieldControl(fields);
-    splitArcadeTank(tankRobot, field, dt);        
-    menuButtons(tankRobot)
-    tankRobot.render();
-}
-
 function update(dt: number) {
+    fieldControl(fields); // Allows the user to swap background image
+    menuButtons(robot); // Enables keybinds to modify robot constants
+
+    // How to move the tank drive robot forward at half speed for 1 second.
+    // dt is in seconds, with the sim being run at 60 fps, so every frame is 1/60 seconds
+    /*
+        let timeout = 0; // declare this once, outside update()
+        timeout += dt;
+        if (timeout < 1) {
+            robot.tankDrive(.5, .5, dt); // drives forward
+        } else {
+            robot.tankDrive(0, 0, dt); // stops the robot
+        }
+    */
+
+
+    // This is the user control loop. Comment this out
+    // if using manual controls
     if (settings.useTankDrive) {
-        driveTankRobot(dt);
+        driveTankRobot(robot, dt);
     } else {
-        driveMecnumRobot(dt);
+        driveMecnumRobot(robot, dt);
     }
 }
 
